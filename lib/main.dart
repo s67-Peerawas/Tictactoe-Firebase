@@ -51,7 +51,7 @@ class _GameBoardState extends State<GameBoard> {
         'board': List.generate(boardSize * boardSize, (_) => ""),
         'turn': 'X',
         'winner': '',
-        'players': {'X': widget.playerId, 'O': ''}, // ให้ player O ว่าง
+        'players': {'X': widget.playerId, 'O': ''}, 
       });
       mySymbol = 'X';
     } else {
@@ -122,7 +122,7 @@ class _GameBoardState extends State<GameBoard> {
         final winner = data['winner'] ?? '';
 
         return Scaffold(
-          appBar: AppBar(title: Text("TicTacToe Firebase")),
+          appBar: AppBar(title: Text("TicTacToe")),
           body: Column(
             children: [
               SizedBox(
