@@ -51,7 +51,7 @@ class _GameBoardState extends State<GameBoard> {
         'board': List.generate(boardSize * boardSize, (_) => ""),
         'turn': 'X',
         'winner': '',
-        'players': {'X': widget.playerId, 'O': ''}, 
+        'players': {'X': widget.playerId, 'O': ''},
       });
       mySymbol = 'X';
     } else {
@@ -77,7 +77,12 @@ class _GameBoardState extends State<GameBoard> {
     });
   }
 
-  Future<void> makeMove(List<List<String>> board, int row, int col, String turn) async {
+  Future<void> makeMove(
+    List<List<String>> board,
+    int row,
+    int col,
+    String turn,
+  ) async {
     if (board[row][col] == "" && turn == mySymbol) {
       board[row][col] = mySymbol;
       List<String> flatBoard = board.expand((e) => e).toList();
@@ -94,11 +99,15 @@ class _GameBoardState extends State<GameBoard> {
 
   String checkWinner(List<List<String>> b) {
     for (int i = 0; i < boardSize; i++) {
-      if (b[i][0] != "" && b[i][0] == b[i][1] && b[i][1] == b[i][2]) return b[i][0];
-      if (b[0][i] != "" && b[0][i] == b[1][i] && b[1][i] == b[2][i]) return b[0][i];
+      if (b[i][0] != "" && b[i][0] == b[i][1] && b[i][1] == b[i][2])
+        return b[i][0];
+      if (b[0][i] != "" && b[0][i] == b[1][i] && b[1][i] == b[2][i])
+        return b[0][i];
     }
-    if (b[0][0] != "" && b[0][0] == b[1][1] && b[1][1] == b[2][2]) return b[0][0];
-    if (b[0][2] != "" && b[0][2] == b[1][1] && b[1][1] == b[2][0]) return b[0][2];
+    if (b[0][0] != "" && b[0][0] == b[1][1] && b[1][1] == b[2][2])
+      return b[0][0];
+    if (b[0][2] != "" && b[0][2] == b[1][1] && b[1][1] == b[2][0])
+      return b[0][2];
     if (b.every((row) => row.every((v) => v != ""))) return "Tie";
     return "";
   }
@@ -110,19 +119,23 @@ class _GameBoardState extends State<GameBoard> {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: firestore.collection("games").doc(widget.gameId).snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+        if (!snapshot.hasData)
+          return Center(child: CircularProgressIndicator());
 
         final data = snapshot.data!.data() ?? {};
-        final flatBoard = (data['board'] as List?)?.map((e) => e.toString()).toList() ??
+        final flatBoard =
+            (data['board'] as List?)?.map((e) => e.toString()).toList() ??
             List.generate(boardSize * boardSize, (_) => "");
         final board = List.generate(
-            boardSize, (row) => flatBoard.sublist(row * boardSize, (row + 1) * boardSize));
+          boardSize,
+          (row) => flatBoard.sublist(row * boardSize, (row + 1) * boardSize),
+        );
 
         final turn = data['turn'] ?? 'X';
         final winner = data['winner'] ?? '';
 
         return Scaffold(
-          appBar: AppBar(title: Text("TicTacToe")),
+          appBar: AppBar(title: Text("OX Game Test")),
           body: Column(
             children: [
               SizedBox(
@@ -139,7 +152,10 @@ class _GameBoardState extends State<GameBoard> {
                   },
                   child: Stack(
                     children: [
-                      CustomPaint(size: Size(tableSize, tableSize), painter: GridPainter()),
+                      CustomPaint(
+                        size: Size(tableSize, tableSize),
+                        painter: GridPainter(),
+                      ),
                       ...List.generate(boardSize, (row) {
                         return List.generate(boardSize, (col) {
                           final mark = board[row][col];
@@ -170,12 +186,10 @@ class _GameBoardState extends State<GameBoard> {
               SizedBox(height: 20),
               Text("You are: $mySymbol", style: TextStyle(fontSize: 24)),
               Text("Turn: $turn", style: TextStyle(fontSize: 24)),
-              if (winner != "") Text("Winner: $winner", style: TextStyle(fontSize: 28)),
+              if (winner != "")
+                Text("Winner: $winner", style: TextStyle(fontSize: 28)),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: resetGame,
-                child: Text("Reset Game"),
-              ),
+              ElevatedButton(onPressed: resetGame, child: Text("Reset Game")),
             ],
           ),
         );
@@ -195,8 +209,16 @@ class GridPainter extends CustomPainter {
     double cellHeight = size.height / boardSize;
 
     for (int i = 0; i <= boardSize; i++) {
-      canvas.drawLine(Offset(0, cellHeight * i), Offset(size.width, cellHeight * i), paint);
-      canvas.drawLine(Offset(cellWidth * i, 0), Offset(cellWidth * i, size.height), paint);
+      canvas.drawLine(
+        Offset(0, cellHeight * i),
+        Offset(size.width, cellHeight * i),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(cellWidth * i, 0),
+        Offset(cellWidth * i, size.height),
+        paint,
+      );
     }
   }
 
