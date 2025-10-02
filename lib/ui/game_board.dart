@@ -4,6 +4,9 @@ import '../domain/models.dart';
 import 'game_controller.dart';
 import 'grid_painter.dart';
 
+const xColor = Colors.blue;
+const oColor = Colors.red;
+
 class GameBoard extends StatelessWidget {
   const GameBoard({super.key});
 
@@ -23,12 +26,18 @@ class GameBoard extends StatelessWidget {
             width: size,
             height: size,
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque, // ✅ ให้แตะได้แม้พื้นที่โปร่งใส
               onTapDown: (d) {
-                final col = (d.localPosition.dx / cell).floor();
-                final row = (d.localPosition.dy / cell).floor();
+                final dx = d.localPosition.dx.clamp(0, size - 0.0001);
+                final dy = d.localPosition.dy.clamp(0, size - 0.0001);
+                final col = (dx / cell).floor();
+                final row = (dy / cell).floor();
+
+                final c = context.read<GameController>();
+                final s = c.state;
                 if (row >= 0 && col >= 0 && row < boardSize && col < boardSize) {
                   if (s.winner.isEmpty && s.turn == c.mySymbol) {
-                    c.tapCell(row, col);
+                    c.tapCell(row, col); // ➜ ข้อ 3 ด้านล่างจะชี้ให้โยนต่อไป repo.makeMove
                   }
                 }
               },

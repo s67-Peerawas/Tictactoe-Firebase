@@ -27,13 +27,11 @@ class LocalGameRepository implements GameRepository {
       _emit(gameId, s.copyWith(oPlayerId: playerId));
       return "O";
     }
-    // already joined → return assigned
     return s.xPlayerId == playerId ? "X" : "O";
   }
 
   @override
   Stream<GameState> watchGame(String gameId) {
-    // ส่งสถานะปัจจุบันก่อน
     Future.microtask(() => _emit(gameId, _stateFor(gameId)));
     return _controllerFor(gameId).stream;
   }
@@ -69,6 +67,13 @@ class LocalGameRepository implements GameRepository {
 
   @override
   Future<void> resetGame(String gameId) async {
-    _emit(gameId, GameState.empty());
+    final s = _stateFor(gameId);
+    _emit(
+      gameId,
+      GameState.empty().copyWith(
+        xPlayerId: s.xPlayerId,
+        oPlayerId: s.oPlayerId,
+      ),
+    );
   }
 }

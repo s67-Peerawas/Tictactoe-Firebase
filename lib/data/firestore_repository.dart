@@ -66,6 +66,19 @@ class FirestoreGameRepository implements GameRepository {
 
   @override
   Future<void> resetGame(String gameId) async {
-    await _doc(gameId).set(GameState.empty().toMap());
+    final ref = _doc(gameId);
+    await firestore.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (!snap.exists) {
+        tx.set(ref, GameState.empty().toMap());
+        return;
+      }
+      final s = GameState.fromMap(snap.data()!);
+      final reset = GameState.empty().copyWith(
+        xPlayerId: s.xPlayerId, // คงผู้เล่นเดิม
+        oPlayerId: s.oPlayerId, // คงผู้เล่นเดิม
+      );
+      tx.set(ref, reset.toMap());
+    });
   }
 }

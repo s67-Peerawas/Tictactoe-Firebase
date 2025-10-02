@@ -7,7 +7,7 @@ abstract class GameRepository {
   /// สตรีมสถานะเกม
   Stream<GameState> watchGame(String gameId);
 
-  /// เดินหมาก (จะเช็คเองว่าถูกตาไหม และช่องว่างไหม ตามนโยบายของ repo)
+  /// เดินหมาก
   Future<void> makeMove({
     required String gameId,
     required String playerId,
