@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../domain/models.dart';
 import '../domain/game_logic.dart';
 import 'game_repository.dart';
@@ -11,14 +12,18 @@ class FirestoreGameRepository implements GameRepository {
       firestore.collection('games').doc(id);
 
   @override
-  Future<String> ensureGame({required String gameId, required String playerId}) async {
+  Future<String> ensureGame({
+    required String gameId,
+    required String playerId,
+  }) async {
     final d = await _doc(gameId).get();
     if (!d.exists) {
-      await _doc(gameId).set(GameState.empty().copyWith(
-        xPlayerId: playerId,
-      ).toMap());
+
+      final first = GameState.empty(size: 3).copyWith(xPlayerId: playerId);
+      await _doc(gameId).set(first.toMap());
       return "X";
     }
+
     final s = GameState.fromMap(d.data()!);
     if (s.oPlayerId.isEmpty && s.xPlayerId != playerId) {
       await _doc(gameId).update({"players.O": playerId});
@@ -47,20 +52,33 @@ class FirestoreGameRepository implements GameRepository {
       final snap = await tx.get(ref);
       GameState s = snap.exists ? GameState.fromMap(snap.data()!) : GameState.empty();
 
-      if (!isInsideBoard(row, col) || s.winner.isNotEmpty) return;
-      final mySymbol = (s.xPlayerId == playerId) ? "X" : (s.oPlayerId == playerId ? "O" : "");
+      final n = s.size;
+
+      if (!isInsideBoard(row, col, n) || s.winner.isNotEmpty) return;
+
+      final mySymbol =
+          (s.xPlayerId == playerId) ? "X" : (s.oPlayerId == playerId ? "O" : "");
       if (mySymbol.isEmpty || s.turn != mySymbol) return;
 
-      final idx = rcToIndex(row, col);
+      final idx = rcToIndex(row, col, n);
       if (s.board[idx].isNotEmpty) return;
 
       final newBoard = [...s.board]..[idx] = mySymbol;
-      final new2D = List.generate(boardSize, (r) => newBoard.sublist(r*boardSize, (r+1)*boardSize));
+      final new2D = List.generate(n, (r) => newBoard.sublist(r * n, (r + 1) * n));
       final w = checkWinner(new2D);
       final next = (mySymbol == "X") ? "O" : "X";
 
-      s = s.copyWith(board: newBoard, winner: w, turn: w.isEmpty ? next : s.turn);
-      tx.update(ref, s.toMap());
+      s = s.copyWith(
+        board: newBoard,
+        winner: w,
+        turn: w.isEmpty ? next : s.turn,
+      );
+
+      if (snap.exists) {
+        tx.update(ref, s.toMap());
+      } else {
+        tx.set(ref, s.toMap());
+      }
     });
   }
 
@@ -74,9 +92,9 @@ class FirestoreGameRepository implements GameRepository {
         return;
       }
       final s = GameState.fromMap(snap.data()!);
-      final reset = GameState.empty().copyWith(
-        xPlayerId: s.xPlayerId, // คงผู้เล่นเดิม
-        oPlayerId: s.oPlayerId, // คงผู้เล่นเดิม
+      final reset = GameState.empty(size: s.size).copyWith( 
+        xPlayerId: s.xPlayerId,
+        oPlayerId: s.oPlayerId,
       );
       tx.set(ref, reset.toMap());
     });

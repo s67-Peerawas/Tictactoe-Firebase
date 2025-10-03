@@ -44,16 +44,17 @@ class LocalGameRepository implements GameRepository {
     required int col,
   }) async {
     var s = _stateFor(gameId);
-    if (!isInsideBoard(row, col) || s.winner.isNotEmpty) return;
+    final n = s.size;
+    if (!isInsideBoard(row, col, n) || s.winner.isNotEmpty) return;
 
     final mySymbol = (s.xPlayerId == playerId) ? "X" : (s.oPlayerId == playerId ? "O" : "");
     if (mySymbol.isEmpty || s.turn != mySymbol) return;
 
-    final idx = rcToIndex(row, col);
+    final idx = rcToIndex(row, col, n);
     if (s.board[idx].isNotEmpty) return;
 
     final newBoard = [...s.board]..[idx] = mySymbol;
-    final new2D = List.generate(boardSize, (r) => newBoard.sublist(r*boardSize, (r+1)*boardSize));
+    final new2D = List.generate(n, (r) => newBoard.sublist(r * n, (r + 1) * n));
     final w = checkWinner(new2D);
     final next = (mySymbol == "X") ? "O" : "X";
 
@@ -70,7 +71,7 @@ class LocalGameRepository implements GameRepository {
     final s = _stateFor(gameId);
     _emit(
       gameId,
-      GameState.empty().copyWith(
+      GameState.empty(size: s.size).copyWith( // ✅ คง size
         xPlayerId: s.xPlayerId,
         oPlayerId: s.oPlayerId,
       ),
