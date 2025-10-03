@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
-import '../domain/models.dart';
 
 class GridPainter extends CustomPainter {
+  final int n;
+  GridPainter({required this.n});
+
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()..strokeWidth = 3.0;
-    final cw = size.width / boardSize;
-    final ch = size.height / boardSize;
+    final p = Paint()
+      ..color = Colors.black54
+      ..strokeWidth = 2;
 
-    for (int i = 0; i <= boardSize; i++) {
-      canvas.drawLine(Offset(0, ch * i), Offset(size.width, ch * i), p);
-      canvas.drawLine(Offset(cw * i, 0), Offset(cw * i, size.height), p);
+    final w = size.width;
+    final h = size.height;
+    final cw = w / n;
+    final ch = h / n;
+
+    // วาดเส้นระหว่างช่อง (ไม่ทับขอบทั้งหมด)
+    for (int i = 1; i < n; i++) {
+      final x = cw * i;
+      final y = ch * i;
+      canvas.drawLine(Offset(x, 0), Offset(x, h), p); // แนวตั้ง
+      canvas.drawLine(Offset(0, y), Offset(w, y), p); // แนวนอน
     }
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant GridPainter oldDelegate) => oldDelegate.n != n;
 }

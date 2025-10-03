@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../domain/models.dart';
 import 'game_controller.dart';
 import 'grid_painter.dart';
@@ -15,37 +16,39 @@ class GameBoard extends StatelessWidget {
     final c = context.watch<GameController>();
     final s = c.state;
 
-    final size = MediaQuery.of(context).size.width;
-    final cell = size / boardSize;
+    final boardPx = MediaQuery.of(context).size.width;
+    final n = s.size;             // ✅ ใช้ขนาดจากสถานะ
+    final cell = boardPx / n;
 
     return Scaffold(
       appBar: AppBar(title: const Text("TicTacToe")),
       body: Column(
         children: [
+          SizedBox(height: 8),
           SizedBox(
-            width: size,
-            height: size,
+            width: boardPx,
+            height: boardPx,
             child: GestureDetector(
-              behavior: HitTestBehavior.opaque, // ✅ ให้แตะได้แม้พื้นที่โปร่งใส
+              behavior: HitTestBehavior.opaque,
               onTapDown: (d) {
-                final dx = d.localPosition.dx.clamp(0, size - 0.0001);
-                final dy = d.localPosition.dy.clamp(0, size - 0.0001);
+                final dx = d.localPosition.dx.clamp(0, boardPx - 0.0001);
+                final dy = d.localPosition.dy.clamp(0, boardPx - 0.0001);
                 final col = (dx / cell).floor();
                 final row = (dy / cell).floor();
 
                 final c = context.read<GameController>();
                 final s = c.state;
-                if (row >= 0 && col >= 0 && row < boardSize && col < boardSize) {
+                if (row >= 0 && col >= 0 && row < n && col < n) {
                   if (s.winner.isEmpty && s.turn == c.mySymbol) {
-                    c.tapCell(row, col); // ➜ ข้อ 3 ด้านล่างจะชี้ให้โยนต่อไป repo.makeMove
+                    c.tapCell(row, col);
                   }
                 }
               },
               child: Stack(
                 children: [
-                  CustomPaint(size: Size(size, size), painter: GridPainter()),
-                  ...List.generate(boardSize, (r) {
-                    return List.generate(boardSize, (q) {
+                  CustomPaint(size: Size(boardPx, boardPx), painter: GridPainter(n: n)),
+                  ...List.generate(n, (r) {
+                    return List.generate(n, (q) {
                       final mark = s.board2D[r][q];
                       if (mark.isEmpty) return const SizedBox.shrink();
                       return Positioned(
@@ -59,6 +62,7 @@ class GameBoard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: cell / 1.5,
                               fontWeight: FontWeight.bold,
+                              color: mark == 'X' ? xColor : oColor,
                             ),
                           ),
                         ),
