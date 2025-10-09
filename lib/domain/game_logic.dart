@@ -1,98 +1,73 @@
-import 'models.dart';
+import 'mark.dart';
 
-String checkWinner(List<List<String>> b) {
-  final int n = b.length;
+class GameLogic {
+  final int gridSize;
+  final String emptyCell;
 
-  int r = 0;
-  while (r < n) {
-    final String first = b[r][0];
-    if (first.isNotEmpty) {
-      int c = 1;
-      bool allSame = true;
-      while (c < n) {
-        if (b[r][c] != first) {
-          allSame = false;
-          break;
-        }
-        c++;
-      }
-      if (allSame) return first;
-    }
-    r++;
+  List<Mark> marks = [];
+  String currentTurn = 'O';
+  bool isGameOver = false;
+  String winner = ''; // '', 'X', 'O', 'DRAW'
+
+  GameLogic({
+    this.gridSize = 3,
+    this.emptyCell = '',
+  });
+
+  void clearBoard() {
+    marks = [];
+    currentTurn = 'O';
+    isGameOver = false;
+    winner = '';
   }
 
-  int c = 0;
-  while (c < n) {
-    final String first = b[0][c];
-    if (first.isNotEmpty) {
-      int rr = 1;
-      bool allSame = true;
-      while (rr < n) {
-        if (b[rr][c] != first) {
-          allSame = false;
-          break;
-        }
-        rr++;
-      }
-      if (allSame) return first;
+  bool placeMark(int row, int col, {String? type}) {
+    if (isGameOver) return false;
+    if (row < 0 || col < 0 || row >= gridSize || col >= gridSize) return false;
+    final occupied = marks.any((m) => m.row == row && m.col == col);
+    if (occupied) return false;
+
+    final t = type ?? currentTurn;
+    marks = [...marks, Mark(row: row, col: col, type: t)];
+
+    final w = _winnerOf();
+    if (w.isNotEmpty) {
+      winner = w;
+      isGameOver = true;
+    } else if (_isDraw()) {
+      winner = 'DRAW';
+      isGameOver = true;
+    } else {
+      currentTurn = (currentTurn == 'O') ? 'X' : 'O';
     }
-    c++;
+    return true;
   }
 
-  {
-    final String first = b[0][0];
-    if (first.isNotEmpty) {
-      int i = 1;
-      bool allSame = true;
-      while (i < n) {
-        if (b[i][i] != first) {
-          allSame = false;
-          break;
-        }
-        i++;
-      }
-      if (allSame) return first;
+  String _winnerOf() {
+    final n = gridSize;
+    final board = List.generate(n, (_) => List.filled(n, emptyCell));
+    for (final m in marks) {
+      board[m.row][m.col] = m.type;
     }
+
+    bool eq(List<String> line) =>
+        line.isNotEmpty && line[0] != emptyCell && line.every((e) => e == line[0]);
+
+    for (int i = 0; i < n; i++) {
+      if (eq(board[i])) return board[i][0];
+      final col = [for (int r = 0; r < n; r++) board[r][i]];
+      if (eq(col)) return col[0];
+    }
+    final d1 = [for (int i = 0; i < n; i++) board[i][i]];
+    if (eq(d1)) return d1[0];
+    final d2 = [for (int i = 0; i < n; i++) board[i][n - 1 - i]];
+    if (eq(d2)) return d2[0];
+    return '';
   }
 
-  {
-    final String first = b[0][n - 1];
-    if (first.isNotEmpty) {
-      int i = 1;
-      bool allSame = true;
-      while (i < n) {
-        if (b[i][n - 1 - i] != first) {
-          allSame = false;
-          break;
-        }
-        i++;
-      }
-      if (allSame) return first;
-    }
+  bool _isDraw() {
+    return marks.length >= gridSize * gridSize && _winnerOf().isEmpty;
   }
-
-  {
-    int rr = 0;
-    while (rr < n) {
-      int cc = 0;
-      while (cc < n) {
-        if (b[rr][cc].isEmpty) {
-          return ""; 
-        }
-        cc++;
-      }
-      rr++;
-    }
-  }
-
-  return "Tie";
 }
 
-bool isInsideBoard(int row, int col, int n) {
-  return row >= 0 && row < n && col >= 0 && col < n;
-}
-
-int rcToIndex(int row, int col, int n) {
-  return row * n + col;
-}
 
